@@ -34,15 +34,15 @@ Collection.get = function get(id) {
   })
   .then(data => new this(data))
   .catch(error => {
-  	console.log(error);
-  	return false;
+    console.log(error);
+    return false;
   });
   return post;
 };
 
 Collection.prototype.save = function save() {
   let post;
-  let url = Collection.url;
+  const url = Collection.url;
   if (!this.hasOwnProperty('id')) {
     post = fetch(url, {
       method: 'POST',
@@ -237,14 +237,6 @@ Photo.prototype = Object.create(Collection.prototype);
 Photo.list = Collection.list;
 Photo.url = 'http://jsonplaceholder.typicode.com/photos';
 
-const usersData = User.list();
-
-usersData.then(data => {
-  const usersList = populateData(data, 'name');
-  document.querySelector('.main').appendChild(usersList);
-  usersList.classList.add('users');
-});
-
 function populateData(arr, property) {
   const usersList = document.createElement('ul');
   arr.forEach((x) => {
@@ -274,8 +266,38 @@ function populateLinks(arr) {
   });
   return albumsList;
 }
-const main = document.querySelector('.main');
 
+
+function addListeners(arr) {
+  arr.forEach(x => {
+    x.addEventListener('click', (ev) => {
+      if (arr.indexOf(ev.target) >= 0 && !ev.target.dataset.active) {
+        const current = ev.target;
+        Album.get(current.dataset.id)
+        .then(data => data.getPhotos())
+        .then(data => {
+          const relevantLinks = populateLinks(data);
+          current.appendChild(relevantLinks);
+          relevantLinks.classList.add('photos');
+          current.dataset.active = true;
+          relevantLinks.addEventListener('click', (e) => {
+            e.stopPropagation();
+          });
+        });
+      }
+    });
+  });
+}
+
+const usersData = User.list();
+
+usersData.then(data => {
+  const usersList = populateData(data, 'name');
+  document.querySelector('.main').appendChild(usersList);
+  usersList.classList.add('users');
+});
+
+const main = document.querySelector('.main');
 main.addEventListener('click', (ev) => {
   const usersList = [...main.querySelector('.users').children];
 
@@ -300,27 +322,3 @@ main.addEventListener('click', (ev) => {
   }
 });
 
-function addListeners(arr) {
-  arr.forEach(x => {
-    x.addEventListener('click', (ev) => {
-      if (arr.indexOf(ev.target) >= 0 && !ev.target.dataset.active) {
-        const current = ev.target;
-        Album.get(current.dataset.id)
-        .then(data => data.getPhotos())
-        .then(data => {
-          const relevantLinks = populateLinks(data);
-          current.appendChild(relevantLinks);
-          relevantLinks.classList.add('photos');
-          current.dataset.active = true;
-          relevantLinks.addEventListener('click', (e) => {
-            e.stopPropagation();
-          });
-        });
-      }
-    });
-  });
-}
-
-m = Collection.get(10)
-let a;
-m.then(data => a = data);
