@@ -1,7 +1,9 @@
 
 function Collection(obj) {
-  for (let element in obj) {
-    this[element] = obj[element];
+  for (const element in obj) {
+    if ({}.hasOwnProperty.call(obj, element)) {
+      this[element] = obj[element];
+    }
   }
 }
 
@@ -113,7 +115,7 @@ function getDifference(obj, backup, history = [], intObj = {}) {
   let result = [];
   result[0] = intObj;
 
-  for (let key in obj) {
+  for (const key in obj) {
     if (typeof(obj[key]) === 'object') {
       if (key !== '_backup') {
         const historyCopy = [];
@@ -128,17 +130,18 @@ function getDifference(obj, backup, history = [], intObj = {}) {
   }
   return result[0];
 }
+
+function backUp(obj) {
+  const backupObj = clone(obj);
+  return backupObj;
+}
+
 function compare(obj) {
   if (!obj.hasOwnProperty('_backup')) {
     obj['_backup'] = backUp(obj);
     return {};
   }
   return getDifference(obj, obj['_backup']);
-}
-
-function backUp(obj) {
-  const backupObj = clone(obj);
-  return backupObj;
 }
 
 function isEmailValid(obj) {
@@ -304,17 +307,17 @@ main.addEventListener('click', (ev) => {
 
     User.get(id)
 		.then(data => {
-  if (data) {
-    return data.getAlbums();
-  }
-  return false;
+      if (data) {
+        return data.getAlbums();
+      }
+      return false;
 		})
 		.then(data => {
-  const childAlbumsHTML = populateData(data, 'title');
-  currentUserItem.appendChild(childAlbumsHTML);
-  const albumLi = [...currentUserItem.querySelectorAll('li')];
-  addListeners(albumLi);
-  currentUserItem.dataset.active = true;
+      const childAlbumsHTML = populateData(data, 'title');
+      currentUserItem.appendChild(childAlbumsHTML);
+      const albumLi = [...currentUserItem.querySelectorAll('li')];
+      addListeners(albumLi);
+      currentUserItem.dataset.active = true;
 		});
   }
 });
