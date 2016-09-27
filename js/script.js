@@ -185,9 +185,7 @@ User.prototype.save = function save() {
 };
 
 User.prototype.getAlbums = function getAlbums() {
-  return new Promise((res, rej) => {
-    res(Album.list());
-  })
+  return Album.list()
   .then((data) => {
     const result = parseData(data, this.id, 'userId');
     return result;
@@ -221,9 +219,7 @@ Album.prototype.save = function save() {
 };
 
 Album.prototype.getPhotos = function getPhotos() {
-  return new Promise((res, rej) => {
-    res(Photo.list());
-  })
+  return Photo.list()
   .then(data => {
     const result = parseData(data, this.id, 'albumId');
     return result;
