@@ -1,3 +1,4 @@
+
 function Collection(obj) {
   for (let element in obj) {
     this[element] = obj[element];
@@ -34,15 +35,15 @@ Collection.get = function get(id) {
   })
   .then(data => new this(data))
   .catch(error => {
-  	console.log(error);
-  	return false;
+    console.log(error);
+    return false;
   });
   return post;
 };
 
 Collection.prototype.save = function save() {
   let post;
-  let url = Collection.url;
+  const url = Collection.url;
   if (!this.hasOwnProperty('id')) {
     post = fetch(url, {
       method: 'POST',
@@ -54,8 +55,6 @@ Collection.prototype.save = function save() {
     });
   } else {
     const changes = compare(this);
-    console.log('changes are ', changes);
-    console.log(url)
     post = fetch(`${url}/${this.id}`, {
       method: 'PATCH',
       body: changes,
@@ -64,11 +63,6 @@ Collection.prototype.save = function save() {
   return post
   .then(() => null)
   .catch(error => error);
-};
-
-function backup(obj) {
-  const backupObj = clone(obj);
-  return backupObj;
 };
 
 function clone(obj) {
@@ -97,59 +91,73 @@ function clone(obj) {
   }
   return newOb;
 }
-function compare(obj) {
-	if (!obj.hasOwnProperty('_backup')) {
-		obj['_backup'] = backup(obj);
-		return {};
-	} else {
-		return getDifference(obj, obj['_backup']);
-	}
-
-}
 
 function populateResult(path, obj) {
-	let current;
-	let result = obj;
-	let cursor = result;
-	let history = [];
-	path.forEach(x => history.push(x));
+  let current;
+  const result = obj;
+  let cursor = result;
+  const history = [];
+  path.forEach(x => history.push(x));
 
-	while (history.length > 0) {
-		current = history.shift();
-		if (!cursor.hasOwnProperty(current)) {
-			cursor[current] = {};
-		} 
-		cursor = cursor[current];
-	}
-	return [result, cursor];
+  while (history.length > 0) {
+    current = history.shift();
+    if (!cursor.hasOwnProperty(current)) {
+      cursor[current] = {};
+    }
+    cursor = cursor[current];
+  }
+  return [result, cursor];
 }
 
 function getDifference(obj, backup, history = [], intObj = {}) {
-	let result = [];
-	result[0] = intObj;
+  let result = [];
+  result[0] = intObj;
 
-	for (let key in obj) {
-		if (typeof(obj[key]) === 'object') {
-			if (key !== '_backup') {
-				let historyCopy = [];
-				history.forEach(x => historyCopy.push(x));
-				historyCopy.push(key);
-				getDifference(obj[key], backup[key], historyCopy, result[0]);
-			}
-		} else if (obj[key] !== backup[key]) {
-			result = populateResult(history, intObj);
-			result[1][key] = obj[key];
-		}
-	}
-	return result[0];
+  for (let key in obj) {
+    if (typeof(obj[key]) === 'object') {
+      if (key !== '_backup') {
+        const historyCopy = [];
+        history.forEach(x => historyCopy.push(x));
+        historyCopy.push(key);
+        getDifference(obj[key], backup[key], historyCopy, result[0]);
+      }
+    } else if (obj[key] !== backup[key]) {
+      result = populateResult(history, intObj);
+      result[1][key] = obj[key];
+    }
+  }
+  return result[0];
+}
+function compare(obj) {
+  if (!obj.hasOwnProperty('_backup')) {
+    obj['_backup'] = backUp(obj);
+    return {};
+  }
+  return getDifference(obj, obj['_backup']);
+}
+
+function backUp(obj) {
+  const backupObj = clone(obj);
+  return backupObj;
 }
 
 function isEmailValid(obj) {
-	if (!obj.hasOwnProperty('email')) {
-		return false;
-	}
-	const regx = /[\w\d.]+@[\w\d]+.[\w\S]{2,5}/gi;
-	return regx.test(obj.email);
+  if (!obj.hasOwnProperty('email')) {
+    return false;
+  }
+  const regx = /[\w\d.]+@[\w\d]+.[\w\S]{2,5}/gi;
+  return regx.test(obj.email);
+}
+
+
+function parseData(arr, id, property) {
+  const relevant = [];
+  arr.forEach((x) => {
+    if (x[property] === id) {
+      relevant.push(x);
+    }
+  });
+  return relevant;
 }
 
 function User(obj) {
@@ -162,12 +170,10 @@ User.list = Collection.list;
 User.get = Collection.get;
 
 User.prototype.save = function save() {
-	let post;
-  let url = User.url;
+  let post;
+  const url = User.url;
   if (this.hasOwnProperty('name') && this.hasOwnProperty('username') && isEmailValid(this)) {
     const changes = compare(this);
-    console.log('changes are ', changes);
-    console.log(url)
     post = fetch(`${url}/${this.id}`, {
       method: 'PATCH',
       body: changes,
@@ -176,20 +182,20 @@ User.prototype.save = function save() {
   return post
   .then(() => null)
   .catch(error => error);
-}
+};
 
 User.prototype.getAlbums = function getAlbums() {
-	return new Promise(function(res, rej) {
-		res(Album.list());
-	})
-	.then((data) => {
-		const result = parseData(data, this.id, 'userId');
-		return result;
-	})
-}
+  return new Promise((res, rej) => {
+    res(Album.list());
+  })
+  .then((data) => {
+    const result = parseData(data, this.id, 'userId');
+    return result;
+  });
+};
 
 function Album(obj) {
-	Collection.call(this, obj);
+  Collection.call(this, obj);
 }
 Album.prototype = Object.create(Collection.prototype);
 
@@ -198,12 +204,12 @@ Album.list = Collection.list;
 Album.get = Collection.get;
 
 Album.prototype.save = function save() {
-	let post;
-  let url = Album.url;
+  let post;
+  const url = Album.url;
   if (this.hasOwnProperty('userId') && this.hasOwnProperty('title')) {
     const changes = compare(this);
     console.log('changes are ', changes);
-    console.log(url)
+    console.log(url);
     post = fetch(`${url}/${this.id}`, {
       method: 'PATCH',
       body: changes,
@@ -212,126 +218,108 @@ Album.prototype.save = function save() {
   return post
   .then(() => null)
   .catch(error => error);
-}
+};
 
 Album.prototype.getPhotos = function getPhotos() {
-	return new Promise(function(res, rej) {
-		res(Photo.list());
-	})
-  .then(data => {
-  	const result = parseData(data, this.id, 'albumId');
-  	return result;
+  return new Promise((res, rej) => {
+    res(Photo.list());
   })
-}
+  .then(data => {
+    const result = parseData(data, this.id, 'albumId');
+    return result;
+  });
+};
 
 function Photo(obj) {
-	Collection.call(this, obj);
+  Collection.call(this, obj);
 }
 Photo.prototype = Object.create(Collection.prototype);
 
 Photo.list = Collection.list;
 Photo.url = 'http://jsonplaceholder.typicode.com/photos';
 
-let usersData = User.list();
-
-usersData.then(data => {
-	const usersList = populateData(data, 'name');
-	console.log(data)
-	document.querySelector('.main').appendChild(usersList);
-	usersList.classList.add('users');
-});
-
 function populateData(arr, property) {
-	let usersList = document.createElement('ul');
-	arr.forEach((x) => {
-		const el = document.createElement('li');
-		el.dataset.id = x.id;
-		el.textContent = x[property];
-		usersList.appendChild(el);
-	});
-	return usersList;
+  const usersList = document.createElement('ul');
+  arr.forEach((x) => {
+    const el = document.createElement('li');
+    el.dataset.id = x.id;
+    el.textContent = x[property];
+    usersList.appendChild(el);
+  });
+  return usersList;
 }
 
 function populateLinks(arr) {
-	let albumsList = document.createElement('ul');
-	arr.forEach((x) => {
-		const el = document.createElement('li');
-		const link = document.createElement('a');
-		const img = document.createElement('img');
-		const text = document.createElement('span');
-		el.appendChild(link);
-		link.href = x.thumbnailUrl;
-		link.target = '_blank';
-		img.src = x.thumbnailUrl;
-		text.textContent = x.title;
-		link.appendChild(img);
-		link.appendChild(text);
-		albumsList.appendChild(el);
-	});
+  const albumsList = document.createElement('ul');
+  arr.forEach((x) => {
+    const el = document.createElement('li');
+    const link = document.createElement('a');
+    const img = document.createElement('img');
+    const text = document.createElement('span');
+    el.appendChild(link);
+    link.href = x.thumbnailUrl;
+    link.target = '_blank';
+    img.src = x.thumbnailUrl;
+    text.textContent = x.title;
+    link.appendChild(img);
+    link.appendChild(text);
+    albumsList.appendChild(el);
+  });
   return albumsList;
-}
-const main = document.querySelector('.main');
-
-main.addEventListener('click', function(ev) {
-	const usersList = [...main.querySelector('.users').children];
-
-	if (usersList.indexOf(ev.target) >= 0 && !ev.target.dataset.active) {
-		const currentUserItem = ev.target;
-		
-		const id = parseInt(currentUserItem.dataset.id);
-
-		User.get(id)
-		.then(data => {
-			if (data) {
-				return data.getAlbums()
-			}
-			return false;
-		})
-		.then(data => {
-			let childAlbumsHTML = populateData(data, 'title');
-			currentUserItem.appendChild(childAlbumsHTML);
-			const albumLi = [...currentUserItem.querySelectorAll('li')];
-			addListeners(albumLi);
-			currentUserItem.dataset.active = true;
-		})
-	} 
-})
-
-function parseData(arr, id, property) {
-	const relevant = [];
-	arr.forEach((x) => {
-		if (x[property] === id) {
-			relevant.push(x);
-		}
-	});
-	return relevant;
 }
 
 
 function addListeners(arr) {
-
-	arr.forEach(x => {
-		x.addEventListener('click', (ev) => {
-			if (arr.indexOf(ev.target) >= 0 && !ev.target.dataset.active) {
-				console.log("click ", x)
-				const current = ev.target;
-				console.log(current)
-				Album.get(current.dataset.id)
-				.then(data => data.getPhotos())
-				.then(data => {
-					const relevantLinks = populateLinks(data);
-					current.appendChild(relevantLinks);
-					relevantLinks.classList.add('photos');
-					current.dataset.active = true;
-					relevantLinks.addEventListener('click', (ev) => {
-						ev.stopPropagation();
-					})
-				})
-			}
-		});
-	});
+  arr.forEach(x => {
+    x.addEventListener('click', (ev) => {
+      if (arr.indexOf(ev.target) >= 0 && !ev.target.dataset.active) {
+        const current = ev.target;
+        Album.get(current.dataset.id)
+        .then(data => data.getPhotos())
+        .then(data => {
+          const relevantLinks = populateLinks(data);
+          current.appendChild(relevantLinks);
+          relevantLinks.classList.add('photos');
+          current.dataset.active = true;
+          relevantLinks.addEventListener('click', (e) => {
+            e.stopPropagation();
+          });
+        });
+      }
+    });
+  });
 }
 
-m = Collection.get(10)
-let a;
-m.then(data => a = data);
+const usersData = User.list();
+
+usersData.then(data => {
+  const usersList = populateData(data, 'name');
+  document.querySelector('.main').appendChild(usersList);
+  usersList.classList.add('users');
+});
+
+const main = document.querySelector('.main');
+main.addEventListener('click', (ev) => {
+  const usersList = [...main.querySelector('.users').children];
+
+  if (usersList.indexOf(ev.target) >= 0 && !ev.target.dataset.active) {
+    const currentUserItem = ev.target;
+    const id = parseInt(currentUserItem.dataset.id, 10);
+
+    User.get(id)
+		.then(data => {
+  if (data) {
+    return data.getAlbums();
+  }
+  return false;
+		})
+		.then(data => {
+  const childAlbumsHTML = populateData(data, 'title');
+  currentUserItem.appendChild(childAlbumsHTML);
+  const albumLi = [...currentUserItem.querySelectorAll('li')];
+  addListeners(albumLi);
+  currentUserItem.dataset.active = true;
+		});
+  }
+});
+
